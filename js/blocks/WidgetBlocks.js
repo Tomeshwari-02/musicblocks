@@ -85,6 +85,12 @@ function setupWidgetBlocks(activity) {
         }
     }
 
+    function _lazyRequirePromise(modules) {
+        return new Promise(resolve => {
+            _lazyRequire(modules, resolve);
+        });
+    }
+
     /**
      * Represents a block for controlling sound envelope (ADSR).
      * @extends FlowBlock
@@ -1501,118 +1507,120 @@ function setupWidgetBlocks(activity) {
         flow(args, logo, turtle, blk) {
             logo.inMatrix = true;
 
-            if (logo.phraseMaker === null) {
-                _lazyRequire(
-                    [
-                        "widgets/PhraseMakerUtils",
-                        "widgets/PhraseMakerGrid",
-                        "widgets/PhraseMakerUI",
-                        "widgets/PhraseMakerAudio",
-                        "widgets/phrasemaker"
-                    ],
-                    function () {
-                        // Create explicit dependency object for PhraseMaker
-                        const phraseMakerDeps = {
-                            activity: activity,
-                            _: _,
-                            platformColor: platformColor,
-                            docById: docById,
-                            docBySelector: docBySelector,
-                            MATRIXSOLFEHEIGHT: MATRIXSOLFEHEIGHT,
-                            MATRIXSOLFEWIDTH: MATRIXSOLFEWIDTH,
-                            toFraction: toFraction,
-                            Singer: Singer,
-                            SOLFEGECONVERSIONTABLE: SOLFEGECONVERSIONTABLE,
-                            slicePath: slicePath,
-                            wheelnav: wheelnav,
-                            delayExecution: delayExecution,
-                            DEFAULTVOICE: DEFAULTVOICE,
-                            getDrumName: getDrumName,
-                            getDrumIcon: getDrumIcon,
-                            noteIsSolfege: noteIsSolfege,
-                            isCustomTemperament: isCustomTemperament,
-                            i18nSolfege: i18nSolfege,
-                            getNote: getNote,
-                            DEFAULTDRUM: DEFAULTDRUM,
-                            last: last,
-                            DRUMS: DRUMS,
-                            SHARP: SHARP,
-                            FLAT: FLAT,
-                            PREVIEWVOLUME: PREVIEWVOLUME,
-                            DEFAULTVOLUME: DEFAULTVOLUME,
-                            noteToFrequency: noteToFrequency,
-                            LCD: LCD,
-                            calcNoteValueToDisplay: calcNoteValueToDisplay,
-                            NOTESYMBOLS: NOTESYMBOLS,
-                            EIGHTHNOTEWIDTH: EIGHTHNOTEWIDTH,
-                            getTemperament: getTemperament
-                        };
-                        logo.phraseMaker = new PhraseMaker(phraseMakerDeps);
-                    }
-                );
-            }
-            logo.phraseMaker.blockNo = blk;
+            const initializeMatrix = () => {
+                logo.phraseMaker.blockNo = blk;
+                logo.phraseMaker._instrumentName = DEFAULTVOICE;
 
-            logo.phraseMaker._instrumentName = DEFAULTVOICE;
+                logo.phraseMaker.rowLabels = [];
+                logo.phraseMaker.rowArgs = [];
+                logo.phraseMaker.graphicsBlocks = [];
+                logo.phraseMaker.clearBlocks();
+                logo.phraseMaker.lyricsON = false;
 
-            logo.phraseMaker.rowLabels = [];
-            logo.phraseMaker.rowArgs = [];
-            logo.phraseMaker.graphicsBlocks = [];
-            logo.phraseMaker.clearBlocks();
-            logo.phraseMaker.lyricsON = false;
+                logo.tupletRhythms = [];
+                logo.tupletParams = [];
+                logo.addingNotesToTuplet = false;
 
-            logo.tupletRhythms = [];
-            logo.tupletParams = [];
-            logo.addingNotesToTuplet = false;
+                const listenerName = "_matrix_" + turtle;
+                logo.setDispatchBlock(blk, turtle, listenerName);
 
-            const listenerName = "_matrix_" + turtle;
-            logo.setDispatchBlock(blk, turtle, listenerName);
+                const __listener = () => {
+                    if (logo.tupletRhythms.length === 0 || logo.phraseMaker.rowLabels.length === 0) {
+                        activity.errorMsg(
+                            _(
+                                "You must have at least one pitch block and one rhythm block in the matrix."
+                            ),
+                            blk
+                        );
+                    } else {
+                        // Process queued up rhythms.
+                        logo.phraseMaker.blockNo = blk;
+                        logo.phraseMaker.sorted = false;
+                        logo.phraseMaker.init(activity, turtle);
 
-            const __listener = () => {
-                if (logo.tupletRhythms.length === 0 || logo.phraseMaker.rowLabels.length === 0) {
-                    activity.errorMsg(
-                        _(
-                            "You must have at least one pitch block and one rhythm block in the matrix."
-                        ),
-                        blk
-                    );
-                } else {
-                    // Process queued up rhythms.
-                    logo.phraseMaker.blockNo = blk;
-                    logo.phraseMaker.sorted = false;
-                    logo.phraseMaker.init(activity, turtle);
+                        for (let i = 0; i < logo.tupletRhythms.length; i++) {
+                            // We have two cases: (1) notes in a tuplet;
+                            // and (2) rhythm block outside of a
+                            // tuplet. Rhythm blocks in a tuplet are
+                            // converted to notes.
+                            switch (logo.tupletRhythms[i][0]) {
+                                case "notes":
+                                case "simple":
+                                    // eslint-disable-next-line no-case-declarations
+                                    const tupletParam = [logo.tupletParams[logo.tupletRhythms[i][1]]];
+                                    tupletParam.push([]);
+                                    for (let j = 2; j < logo.tupletRhythms[i].length; j++) {
+                                        tupletParam[1].push(logo.tupletRhythms[i][j]);
+                                    }
 
-                    for (let i = 0; i < logo.tupletRhythms.length; i++) {
-                        // We have two cases: (1) notes in a tuplet;
-                        // and (2) rhythm block outside of a
-                        // tuplet. Rhythm blocks in a tuplet are
-                        // converted to notes.
-                        switch (logo.tupletRhythms[i][0]) {
-                            case "notes":
-                            case "simple":
-                                // eslint-disable-next-line no-case-declarations
-                                const tupletParam = [logo.tupletParams[logo.tupletRhythms[i][1]]];
-                                tupletParam.push([]);
-                                for (let j = 2; j < logo.tupletRhythms[i].length; j++) {
-                                    tupletParam[1].push(logo.tupletRhythms[i][j]);
-                                }
-
-                                logo.phraseMaker.addTuplet(tupletParam);
-                                break;
-                            default:
-                                logo.phraseMaker.addNotes(
-                                    logo.tupletRhythms[i][1],
-                                    logo.tupletRhythms[i][2]
-                                );
-                                break;
+                                    logo.phraseMaker.addTuplet(tupletParam);
+                                    break;
+                                default:
+                                    logo.phraseMaker.addNotes(
+                                        logo.tupletRhythms[i][1],
+                                        logo.tupletRhythms[i][2]
+                                    );
+                                    break;
+                            }
                         }
-                    }
 
-                    logo.phraseMaker.makeClickable();
-                }
+                        logo.phraseMaker.makeClickable();
+                    }
+                };
+
+                logo.setTurtleListener(turtle, listenerName, __listener);
             };
 
-            logo.setTurtleListener(turtle, listenerName, __listener);
+            if (logo.phraseMaker === null) {
+                _lazyRequirePromise([
+                    "widgets/PhraseMakerUtils",
+                    "widgets/PhraseMakerGrid",
+                    "widgets/PhraseMakerUI",
+                    "widgets/PhraseMakerAudio",
+                    "widgets/phrasemaker"
+                ]).then(() => {
+                    // Create explicit dependency object for PhraseMaker
+                    const phraseMakerDeps = {
+                        activity: activity,
+                        _: _,
+                        platformColor: platformColor,
+                        docById: docById,
+                        docBySelector: docBySelector,
+                        MATRIXSOLFEHEIGHT: MATRIXSOLFEHEIGHT,
+                        MATRIXSOLFEWIDTH: MATRIXSOLFEWIDTH,
+                        toFraction: toFraction,
+                        Singer: Singer,
+                        SOLFEGECONVERSIONTABLE: SOLFEGECONVERSIONTABLE,
+                        slicePath: slicePath,
+                        wheelnav: wheelnav,
+                        delayExecution: delayExecution,
+                        DEFAULTVOICE: DEFAULTVOICE,
+                        getDrumName: getDrumName,
+                        getDrumIcon: getDrumIcon,
+                        noteIsSolfege: noteIsSolfege,
+                        isCustomTemperament: isCustomTemperament,
+                        i18nSolfege: i18nSolfege,
+                        getNote: getNote,
+                        DEFAULTDRUM: DEFAULTDRUM,
+                        last: last,
+                        DRUMS: DRUMS,
+                        SHARP: SHARP,
+                        FLAT: FLAT,
+                        PREVIEWVOLUME: PREVIEWVOLUME,
+                        DEFAULTVOLUME: DEFAULTVOLUME,
+                        noteToFrequency: noteToFrequency,
+                        LCD: LCD,
+                        calcNoteValueToDisplay: calcNoteValueToDisplay,
+                        NOTESYMBOLS: NOTESYMBOLS,
+                        EIGHTHNOTEWIDTH: EIGHTHNOTEWIDTH,
+                        getTemperament: getTemperament
+                    };
+                    logo.phraseMaker = new PhraseMaker(phraseMakerDeps);
+                    initializeMatrix();
+                });
+            } else {
+                initializeMatrix();
+            }
 
             if (args.length === 1) return [args[0], 1];
         }

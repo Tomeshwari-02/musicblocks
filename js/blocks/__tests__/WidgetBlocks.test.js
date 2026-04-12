@@ -123,6 +123,20 @@ global.TemperamentWidget = jest.fn(() => ({
     scale: null,
     init: jest.fn()
 }));
+global.PhraseMaker = jest.fn(() => ({
+    blockNo: null,
+    _instrumentName: null,
+    rowLabels: [],
+    rowArgs: [],
+    graphicsBlocks: [],
+    sorted: false,
+    lyricsON: false,
+    clearBlocks: jest.fn(),
+    init: jest.fn(),
+    addTuplet: jest.fn(),
+    addNotes: jest.fn(),
+    makeClickable: jest.fn()
+}));
 
 global.instrumentsEffects = {};
 global.instrumentsFilters = {};
@@ -173,6 +187,7 @@ const createMockLogo = () => {
         modeWidget: null,
         Oscilloscope: null,
         oscilloscopeTurtles: [],
+        phraseMaker: null,
         synth: {
             createSynth: jest.fn(),
             startingPitch: null
@@ -183,6 +198,15 @@ const createMockLogo = () => {
 };
 
 const { setupWidgetBlocks } = require("../WidgetBlocks");
+
+const loadWidgetBlocksWithInjectedRequire = (customRequire, customDefine) => {
+    const fs = require("fs");
+    const path = require("path");
+    const source = fs.readFileSync(path.resolve(__dirname, "../WidgetBlocks.js"), "utf8");
+    const module = { exports: {} };
+    const factory = new Function("require", "define", "module", "exports", source + "\nreturn module.exports;");
+    return factory(customRequire, customDefine, module, module.exports);
+};
 
 describe("setupWidgetBlocks", () => {
     let activity;
@@ -347,6 +371,65 @@ describe("setupWidgetBlocks", () => {
             expect(logo.inSample).toBe(true);
             expect(logo.sample).toBeDefined();
             expect(result).toEqual(["childBlk", 1]);
+        });
+    });
+
+    describe("MatrixBlock", () => {
+        it("waits for PhraseMaker to load before initializing the matrix", async () => {
+            jest.useFakeTimers();
+
+            const asyncRequire = jest.fn((modules, callback) => {
+                setTimeout(() => callback(), 0);
+            });
+            const amdDefine = function () {};
+            amdDefine.amd = true;
+
+            const injected = loadWidgetBlocksWithInjectedRequire(asyncRequire, amdDefine);
+            const injectedActivity = createMockActivity();
+            const injectedLogo = createMockLogo();
+            injectedActivity.blocks.blockList.matrixBlock = { connections: [] };
+
+            const matrixPhraseMaker = {
+                blockNo: null,
+                _instrumentName: null,
+                rowLabels: [],
+                rowArgs: [],
+                graphicsBlocks: [],
+                clearBlocks: jest.fn(),
+                init: jest.fn(),
+                addTuplet: jest.fn(),
+                addNotes: jest.fn(),
+                makeClickable: jest.fn(),
+                sorted: false,
+                lyricsON: false
+            };
+            global.PhraseMaker.mockImplementationOnce(() => matrixPhraseMaker);
+
+            injected.setupWidgetBlocks(injectedActivity);
+            const matrixBlock = injectedActivity.blockInstances.matrix;
+
+            const result = matrixBlock.flow([7], injectedLogo, 2, "matrixBlock");
+
+            expect(injectedLogo.phraseMaker).toBeNull();
+            expect(injectedLogo.setDispatchBlock).not.toHaveBeenCalled();
+            expect(result).toEqual([7, 1]);
+
+            jest.runAllTimers();
+            await Promise.resolve();
+
+            expect(global.PhraseMaker).toHaveBeenCalled();
+            expect(injectedLogo.phraseMaker).toBe(matrixPhraseMaker);
+            expect(injectedLogo.phraseMaker.blockNo).toBe("matrixBlock");
+            expect(injectedLogo.setDispatchBlock).toHaveBeenCalledWith(
+                "matrixBlock",
+                2,
+                "_matrix_2"
+            );
+            expect(injectedLogo.setTurtleListener).toHaveBeenCalledWith(
+                2,
+                "_matrix_2",
+                expect.any(Function)
+            );
         });
     });
 });
