@@ -188,4 +188,12 @@ describe("piemenus behavioral tests", () => {
         // Octave 4 -> 3.
         expect(mockBlock.blocks.setPitchOctave).toHaveBeenCalledWith("mock-id", 3);
     });
+
+    describe("Block Help Menu", () => {
+        it("should lazy load help before opening the aux pie menu help widget", () => {
+            expect(piemenusContent).toMatch(
+                /navigateFunction = async \(\) => \{\s*await lazyLoad\("widgets\/help"\);\s*that\.blocks\.activeBlock = blockBlock;\s*new HelpWidget\(that, true\);/
+            );
+        });
+    });
 });
