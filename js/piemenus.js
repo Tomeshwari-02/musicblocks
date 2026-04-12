@@ -3851,7 +3851,8 @@ const piemenuBlockContext = block => {
     }
 
     if (helpButton !== null) {
-        wheel.navItems[helpButton].navigateFunction = () => {
+        wheel.navItems[helpButton].navigateFunction = async () => {
+            await lazyLoad("widgets/help");
             that.blocks.activeBlock = blockBlock;
             new HelpWidget(that, true);
             docById("contextWheelDiv").style.display = "none";

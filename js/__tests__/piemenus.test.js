@@ -476,4 +476,12 @@ describe("Pie Menus Module - FULLY CORRECTED", () => {
             expect(piemenusContent).toContain("piemenuKey");
         });
     });
+
+    describe("Block Help Menu", () => {
+        it("should lazy load help before opening the aux pie menu help widget", () => {
+            expect(piemenusContent).toMatch(
+                /navigateFunction = async \(\) => \{\s*await lazyLoad\("widgets\/help"\);\s*that\.blocks\.activeBlock = blockBlock;\s*new HelpWidget\(that, true\);/
+            );
+        });
+    });
 });
