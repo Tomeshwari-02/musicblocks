@@ -3850,8 +3850,7 @@ const piemenuBlockContext = block => {
     }
 
     if (helpButton !== null) {
-        wheel.navItems[helpButton].navigateFunction = async () => {
-            await lazyLoad("widgets/help");
+        wheel.navItems[helpButton].navigateFunction = () => {
             that.blocks.activeBlock = blockBlock;
             if (typeof HelpWidget === "undefined") {
                 if (typeof require !== "undefined") {
