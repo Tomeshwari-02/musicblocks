@@ -190,9 +190,9 @@ describe("piemenus behavioral tests", () => {
     });
 
     describe("Block Help Menu", () => {
-        it("should lazy load help before opening the aux pie menu help widget", () => {
+        it("should load help before opening the aux pie menu help widget", () => {
             expect(piemenusContent).toMatch(
-                /navigateFunction = async \(\) => \{\s*await lazyLoad\("widgets\/help"\);\s*that\.blocks\.activeBlock = blockBlock;\s*new HelpWidget\(that, true\);/
+                /if \(typeof HelpWidget === "undefined"\)\s*\{\s*if \(typeof require !== "undefined"\)\s*\{\s*require\(\["widgets\/help"\], function \(\) \{\s*new HelpWidget\(that, true\);/
             );
         });
     });
