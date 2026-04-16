@@ -282,6 +282,7 @@ class JSEditor {
      */
 
     _setup() {
+        const defaultOnClose = this.widgetWindow.onclose.bind(this.widgetWindow);
         this.widgetWindow.onclose = () => {
             if (this._resizeHandlers) {
                 document.removeEventListener("mousemove", this._resizeHandlers.doResize);
@@ -289,6 +290,7 @@ class JSEditor {
                 this._resizeHandlers = null;
             }
             this.isOpen = false;
+            defaultOnClose();
         };
 
         this.widgetWindow.onmaximize = () => {
@@ -925,12 +927,13 @@ class JSEditor {
     }
 
     /**
-     * Triggerred when the "run" button on the widget is pressed.
-     * Runs the JavaScript code that is in the editor.
+     * Triggered when the "run" button on the widget is pressed.
+     * Evaluates the JavaScript code securely using an AST block mapping to ensure
+     * safe block-enforced execution inside the MusicBlocks Engine.
      *
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    _runCode() {
+    async _runCode() {
         if (this._showingHelp) return;
 
         JSEditor.clearConsole();
@@ -943,11 +946,15 @@ class JSEditor {
         }
 
         try {
-            MusicBlocks.init(true);
-            new Function(this._code)();
+            await this._codeToBlocks();
             JSEditor.logConsole("Code executed successfully!", "green");
+
+            const playNativeBtn = docById("play");
+            if (playNativeBtn) {
+                playNativeBtn.click();
+            }
         } catch (e) {
-            JSEditor.logConsole(`Runtime Error: ${e.message}`, "maroon");
+            JSEditor.logConsole(`Sandbox Error: ${e.message}`, "maroon");
             if (e.stack) {
                 JSEditor.logConsole(`Stack trace: ${e.stack}`, "maroon");
             }

@@ -228,7 +228,7 @@ const doAnalyzeProject = function () {
 /**
  * Represents an activity in the application.
  */
-// eslint-disable-next-line no-redeclare
+
 class Activity {
     /**
      * Creates an Activity instance.
@@ -1945,20 +1945,20 @@ class Activity {
                         flag = 0;
                         recording();
                         doRecordButton();
-                        return; // Exit without saving the file
+                        return;
                     }
-                    const downloadLink = document.createElement("a");
-                    downloadLink.href = URL.createObjectURL(blob);
-                    downloadLink.download = `${filename}.webm`;
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    URL.revokeObjectURL(blob);
-                    document.body.removeChild(downloadLink);
+
+                    const blob = new Blob(recordedChunks, { type: "video/webm" });
+                    const url = URL.createObjectURL(blob);
+
+                    activity.save.download("webm", url, filename);
+
+                    recordedChunks = [];
                     flag = 0;
+
                     // Allow multiple recordings
                     recording();
                     doRecordButton();
-                    that.textMsg(_("Recording stopped. File saved."));
                 };
                 // Prevent zero-byte files
                 if (!recordedChunks || recordedChunks.length === 0) {
@@ -1989,6 +1989,27 @@ class Activity {
                 }
                 mediaRecorder = null;
                 // Prompt to save file
+                const filename = window.prompt(_("Enter file name"));
+                if (filename === null || filename.trim() === "") {
+                    alert(_("File save canceled"));
+                    flag = 0;
+                    recording();
+                    doRecordButton();
+                    return; // Exit without saving the file
+                }
+                const downloadLink = document.createElement("a");
+                downloadLink.href = URL.createObjectURL(blob);
+                downloadLink.download = `${filename}.webm`;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                that.textMsg(_("Saved! Check your Downloads folder."));
+                URL.revokeObjectURL(blob);
+                document.body.removeChild(downloadLink);
+                flag = 0;
+                // Allow multiple recordings
+                recording();
+                doRecordButton();
+                that.textMsg(_("Recording stopped. File saved."));
                 if (window.MBDialog && typeof window.MBDialog.prompt === "function") {
                     window.MBDialog.prompt({
                         title: _("Save recording"),
@@ -2041,7 +2062,15 @@ class Activity {
                 };
 
                 mediaRecorder.onstop = function () {
-                    saveFile(recordedChunks);
+                    //saveFile(recordedChunks);
+                    //recordedChunks = [];
+                    //flag = 0;
+                    //recInside.setAttribute("fill", "#ffffff");
+                    const blob = new Blob(recordedChunks, { type: "video/webm" });
+                    const url = URL.createObjectURL(blob);
+
+                    activity.save.download("webm", url, null);
+
                     recordedChunks = [];
                     flag = 0;
                     recInside.setAttribute("fill", "#ffffff");
@@ -2493,18 +2522,28 @@ class Activity {
          */
         this._deletePlugin = () => {
             if (this.palettes.activePalette !== null) {
-                const obj = JSON.parse(this.storage.plugins);
+                const obj = safeJSONParse(this.storage.plugins);
+                if (!obj) return;
 
-                if (this.palettes.activePalette in obj["PALETTEPLUGINS"]) {
+                if (obj["PALETTEPLUGINS"] && this.palettes.activePalette in obj["PALETTEPLUGINS"]) {
                     delete obj["PALETTEPLUGINS"][this.palettes.activePalette];
                 }
-                if (this.palettes.activePalette in obj["PALETTEFILLCOLORS"]) {
+                if (
+                    obj["PALETTEFILLCOLORS"] &&
+                    this.palettes.activePalette in obj["PALETTEFILLCOLORS"]
+                ) {
                     delete obj["PALETTEFILLCOLORS"][this.palettes.activePalette];
                 }
-                if (this.palettes.activePalette in obj["PALETTESTROKECOLORS"]) {
+                if (
+                    obj["PALETTESTROKECOLORS"] &&
+                    this.palettes.activePalette in obj["PALETTESTROKECOLORS"]
+                ) {
                     delete obj["PALETTESTROKECOLORS"][this.palettes.activePalette];
                 }
-                if (this.palettes.activePalette in obj["PALETTEHIGHLIGHTCOLORS"]) {
+                if (
+                    obj["PALETTEHIGHLIGHTCOLORS"] &&
+                    this.palettes.activePalette in obj["PALETTEHIGHLIGHTCOLORS"]
+                ) {
                     delete obj["PALETTEHIGHLIGHTCOLORS"][this.palettes.activePalette];
                 }
                 for (
@@ -2514,7 +2553,7 @@ class Activity {
                 ) {
                     const name =
                         this.palettes.dict[this.palettes.activePalette].protoList[i]["name"];
-                    if (name in obj["FLOWPLUGINS"]) {
+                    if (obj["FLOWPLUGINS"] && name in obj["FLOWPLUGINS"]) {
                         debugLog("deleting " + name);
                         delete obj["FLOWPLUGINS"][name];
                     }
@@ -3105,7 +3144,7 @@ class Activity {
             this.addEventListener(window, "mousedown", this._resetIdleTimer);
             this.addEventListener(window, "keydown", this._resetIdleTimer);
             this.addEventListener(window, "touchstart", this._resetIdleTimer);
-            this.addEventListener(window, "wheel", this._resetIdleTimer);
+            this.addEventListener(window, "wheel", this._resetIdleTimer, { passive: true });
 
             // Periodic check for idle state - store interval ID for cleanup
             this._idleWatcherInterval = setInterval(() => {
@@ -6748,9 +6787,9 @@ class Activity {
             const xhr = new XMLHttpRequest();
             xhr.open("GET", url, true);
             const that = this;
-            xhr.onload = () => {
+            xhr.onload = async () => {
                 if (xhr.status === 200) {
-                    const obj = processRawPluginData(that, xhr.responseText, url);
+                    const obj = await processRawPluginData(that, xhr.responseText, url);
                     // Save plugins to local storage.
                     if (obj !== null) {
                         that.storage.plugins = preparePluginExports(that, obj);
@@ -6770,14 +6809,26 @@ class Activity {
 
         this._doOpenPlugin = () => {
             this.toolbar.closeAuxToolbar(showHideAuxMenu);
-            const name = prompt(
+            const rawName = prompt(
                 _("Enter the name of a built-in plugin, or leave blank to upload a plugin file:")
             );
-            if (name === null) {
+            if (rawName === null) {
                 return; // User cancelled the operation
             }
-            if (name.trim() !== "") {
-                this._loadBuiltInPlugin(name.trim().toLowerCase());
+
+            const name = rawName.trim().toLowerCase();
+            if (name !== "") {
+                // Validate: only allow safe characters (alphanumeric, hyphens, and underscores)
+                // This prevents path traversal attacks like "../../secrets"
+                if (!/^[a-z0-9\-_]+$/.test(name)) {
+                    alert(
+                        _(
+                            "Invalid plugin name. Only alphanumeric characters, hyphens, and underscores are allowed."
+                        )
+                    );
+                    return;
+                }
+                this._loadBuiltInPlugin(name);
             } else {
                 this.pluginChooser.focus();
                 this.pluginChooser.click();
@@ -8175,10 +8226,8 @@ class Activity {
             // Load any plugins saved in local storage.
             this.pluginData = this.storage.plugins;
             if (this.pluginData !== null && this.pluginData !== "null") {
-                updatePluginObj(
-                    this,
-                    processPluginData(this, this.pluginData, "localStorage:plugins")
-                );
+                const obj = await processPluginData(this, this.pluginData, "localStorage:plugins");
+                updatePluginObj(this, obj);
             }
 
             // Load custom mode saved in local storage.
@@ -8292,10 +8341,20 @@ class Activity {
                     };
 
                     midiReader.onload = e => {
-                        const midi = new Midi(e.target.result);
-
-                        console.debug(midi);
-                        midiImportBlocks(midi);
+                        try {
+                            const midi = new Midi(e.target.result);
+                            console.debug(midi);
+                            midiImportBlocks(midi);
+                        } catch (err) {
+                            console.error("MIDI import failed:", err);
+                            if (that && typeof that.errorMsg === "function") {
+                                that.errorMsg(
+                                    _(
+                                        "Cannot load project from the file. Please check the file type."
+                                    )
+                                );
+                            }
+                        }
                     };
 
                     const file = that.fileChooser.files[0];
@@ -8389,10 +8448,18 @@ class Activity {
                     }, 200);
                 };
                 midiReader.onload = e => {
-                    const midi = new Midi(e.target.result);
-
-                    console.debug(midi);
-                    midiImportBlocks(midi);
+                    try {
+                        const midi = new Midi(e.target.result);
+                        console.debug(midi);
+                        midiImportBlocks(midi);
+                    } catch (err) {
+                        console.error("MIDI import failed:", err);
+                        if (that && typeof that.errorMsg === "function") {
+                            that.errorMsg(
+                                _("Cannot load project from the file. Please check the file type.")
+                            );
+                        }
+                    }
                 };
 
                 // Music Block Parser from abc to MB
@@ -8465,8 +8532,8 @@ class Activity {
                         document.body.style.cursor = "wait";
                         //doLoadAnimation();
 
-                        setTimeout(() => {
-                            const obj = processRawPluginData(
+                        setTimeout(async () => {
+                            const obj = await processRawPluginData(
                                 that,
                                 reader.result,
                                 pluginFile && pluginFile.name
