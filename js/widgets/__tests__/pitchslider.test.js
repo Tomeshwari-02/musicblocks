@@ -84,6 +84,10 @@ const createMockWidgetWindow = () => {
 
 const PitchSlider = require("../pitchslider.js");
 
+// Import and expose escapeHTML for XSS-safe DOM manipulation
+const { escapeHTML } = require("../../utils/utils");
+global.escapeHTML = escapeHTML;
+
 describe("PitchSlider Widget", () => {
     let activityMock;
     let slider;

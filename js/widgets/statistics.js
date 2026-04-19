@@ -133,21 +133,21 @@ class StatsWindow {
     displayInfo(stats) {
         const lowHertz = stats["lowestNote"][2] + 0.5;
         const highHertz = stats["highestNote"][2] + 0.5;
-        this.jsonObject.innerHTML = `<li>duples: ${stats["duples"]}</li>
-            <li>triplets: ${stats["triplets"]}</li>
-            <li>quintuplets: ${stats["quintuplets"]}</li>
-            <li style="white-space: pre-wrap; width: 150px">pitch names: ${Array.from(
-                stats["pitchNames"]
-            ).join(", ")}</li>
-            <li>number of notes: ${stats["numberOfNotes"]}</li>
-            <li style="white-space: pre-wrap; width: 150px">lowest note: ${
+        this.jsonObject.innerHTML = `<li>duples: ${escapeHTML(stats["duples"])}</li>
+            <li>triplets: ${escapeHTML(stats["triplets"])}</li>
+            <li>quintuplets: ${escapeHTML(stats["quintuplets"])}</li>
+            <li style="white-space: pre-wrap; width: 150px">pitch names: ${escapeHTML(
+                Array.from(stats["pitchNames"]).join(", ")
+            )}</li>
+            <li>number of notes: ${escapeHTML(stats["numberOfNotes"])}</li>
+            <li style="white-space: pre-wrap; width: 150px">lowest note: ${escapeHTML(
                 stats["lowestNote"][0]
-            },${lowHertz.toFixed(0)}Hz</li>
-            <li style="white-space: pre-wrap; width: 150px">highest note: ${
+            )},${lowHertz.toFixed(0)}Hz</li>
+            <li style="white-space: pre-wrap; width: 150px">highest note: ${escapeHTML(
                 stats["highestNote"][0]
-            },${highHertz.toFixed(0)}Hz</li>
-            <li>rests used: ${stats["rests"]}</li>
-            <li>ornaments used: ${stats["ornaments"]}</li>`;
+            )},${highHertz.toFixed(0)}Hz</li>
+            <li>rests used: ${escapeHTML(stats["rests"])}</li>
+            <li>ornaments used: ${escapeHTML(stats["ornaments"])}</li>`;
     }
 }
 /* istanbul ignore next */

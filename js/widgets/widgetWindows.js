@@ -455,13 +455,14 @@ class WidgetWindow {
     addSelectorButton(list, initial, parent) {
         const el = this._create("div", "wfbtItem", parent || this._toolbar);
         el.innerHTML = "";
-        el.insertAdjacentHTML("afterbegin", `<select value="${initial}" />`);
-        const selector = el.querySelector("select");
+        const select = document.createElement("select");
+        select.value = escapeHTML(initial);
+        el.appendChild(select);
         for (const i of list) {
             const newOption = new Option("turtle " + i, i);
-            selector.add(newOption);
+            select.add(newOption);
         }
-        return selector;
+        return select;
     }
 
     /**
@@ -482,12 +483,15 @@ class WidgetWindow {
      * @returns {HTMLElement}
      */
     modifyButton(index, icon, iconSize, label) {
-        const innerHTML = `
-            <img src="header-icons/${icon}" title="${label}" alt="${label}" height="${iconSize}" width="${iconSize}"/> 
-            `;
+        const img = document.createElement("img");
+        img.src = `header-icons/${escapeHTML(icon)}`;
+        img.title = escapeHTML(label);
+        img.alt = escapeHTML(label);
+        img.height = iconSize;
+        img.width = iconSize;
 
         this._buttons[index].innerHTML = "";
-        this._buttons[index].insertAdjacentHTML("afterbegin", innerHTML);
+        this._buttons[index].appendChild(img);
         return this._buttons[index];
     }
 
@@ -538,15 +542,15 @@ class WidgetWindow {
     addButton(icon, iconSize, label, parent) {
         const el = this._create("div", "wfbtItem", parent || this._toolbar);
 
-        const innerHTML = `<img src="header-icons/${icon}" 
-                  title="${label}" 
-                  alt="${label}" 
-                  height="${iconSize}" 
-                  width="${iconSize}" 
-             />`;
+        const img = document.createElement("img");
+        img.src = `header-icons/${escapeHTML(icon)}`;
+        img.title = escapeHTML(label);
+        img.alt = escapeHTML(label);
+        img.height = iconSize;
+        img.width = iconSize;
 
         el.innerHTML = "";
-        el.insertAdjacentHTML("afterbegin", innerHTML);
+        el.appendChild(img);
         this._buttons.push(el);
         return el;
     }

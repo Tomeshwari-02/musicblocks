@@ -21,6 +21,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+// Import and expose escapeHTML for XSS-safe DOM manipulation
+const { escapeHTML } = require("../utils/utils");
+global.escapeHTML = escapeHTML;
+
 const StatsWindow = require("./statistics.js");
 
 describe("StatsWindow", () => {

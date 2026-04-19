@@ -156,9 +156,12 @@ class Arpeggio {
 
             arpeggioCell = arpeggioTableRow.insertCell();
             // Create tables to store individual notes.
-            arpeggioCell.innerHTML = `<table cellpadding="0px" id="arpeggioCellTable${j}">
-                    <tr></tr>
-                </table>`;
+            const table = document.createElement("table");
+            table.cellPadding = "0px";
+            table.id = `arpeggioCellTable${j}`;
+            table.insertRow();
+            arpeggioCell.innerHTML = "";
+            arpeggioCell.appendChild(table);
             arpeggioCellTable = docById("arpeggioCellTable" + j);
 
             // We'll use this element to put the clickable notes for this row.

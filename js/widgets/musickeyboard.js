@@ -1602,7 +1602,7 @@ function MusicKeyboard(activity) {
             } else {
                 cell.innerHTML = `${i18nSolfege(
                     this.displayLayout[i].noteName
-                )}<sub>${this.displayLayout[i].noteOctave.toString()}</sub>`;
+                )}<sub>${escapeHTML(this.displayLayout[i].noteOctave.toString())}</sub>`;
             }
 
             cell.setAttribute("id", "labelcol" + (n - i - 1));
@@ -1698,7 +1698,7 @@ function MusicKeyboard(activity) {
             cell.style.maxWidth = cell.style.width;
             cell.style.lineHeight = 60 + "%";
             cell.style.textAlign = "center";
-            cell.innerHTML = `${dur[0].toString()}/${dur[1].toString()}`;
+            cell.innerHTML = `${escapeHTML(dur[0].toString())}/${escapeHTML(dur[1].toString())}`;
             cell.setAttribute("id", "cells-" + j);
             cell.setAttribute("start", selectedNotes[j].startTime);
             cell.setAttribute("dur", maxWidth);
@@ -2809,7 +2809,7 @@ function MusicKeyboard(activity) {
                     myrowId < WHITEKEYS.length
                         ? `<small>(${String.fromCharCode(WHITEKEYS[myrowId])})</small><br/>`
                         : ""
-                }${this.displayLayout[p].voice}`;
+                }${escapeHTML(this.displayLayout[p].voice)}`;
 
                 this.displayLayout[p].objId = "whiteRow" + myrowId.toString();
 
@@ -2838,7 +2838,7 @@ function MusicKeyboard(activity) {
                     myrow3Id < HERTZKEYS.length
                         ? "<small>(${String.fromCharCode(HERTZKEYS[myrow3Id])})</small><br/>"
                         : ""
-                }${this.displayLayout[p].noteOctave}`;
+                }${escapeHTML(this.displayLayout[p].noteOctave)}`;
 
                 this.displayLayout[p].objId = "hertzRow" + myrow3Id.toString();
 
@@ -2946,15 +2946,15 @@ function MusicKeyboard(activity) {
                     if (SOLFEGENAMES.includes(nname)) {
                         newel2.innerHTML = `<small>(${String.fromCharCode(
                             BLACKKEYS[myrow2Id]
-                        )})</small><br/>${i18nSolfege(nname)}${FLAT}${
+                        )})</small><br/>${i18nSolfege(nname)}${FLAT}${escapeHTML(
                             this.displayLayout[p].noteOctave
-                        }`;
+                        )}`;
                     } else {
                         newel2.innerHTML = `<small>(${String.fromCharCode(
                             BLACKKEYS[myrow2Id]
-                        )})</small><br/>${this.displayLayout[p].noteName}${
+                        )})</small><br/>${escapeHTML(this.displayLayout[p].noteName)}${escapeHTML(
                             this.displayLayout[p].noteOctave
-                        }`;
+                        )}`;
                     }
                 }
                 if (p < this.layout.length) {
@@ -2992,15 +2992,15 @@ function MusicKeyboard(activity) {
                             myrowId < WHITEKEYS.length
                                 ? `<small>(${String.fromCharCode(WHITEKEYS[myrowId])})</small><br/>`
                                 : ""
-                        }${i18nSolfege(this.displayLayout[p].noteName)}${
+                        }${i18nSolfege(this.displayLayout[p].noteName)}${escapeHTML(
                             this.displayLayout[p].noteOctave
-                        }`;
+                        )}`;
                     } else {
                         newel.innerHTML = `${
                             myrowId < WHITEKEYS.length
                                 ? `<small>(${String.fromCharCode(WHITEKEYS[myrowId])})</small><br/>`
                                 : ""
-                        }${this.displayLayout[p].noteName}${this.displayLayout[p].noteOctave}`;
+                        }${escapeHTML(this.displayLayout[p].noteName)}${escapeHTML(this.displayLayout[p].noteOctave)}`;
                     }
                 }
                 if (p < this.layout.length) {

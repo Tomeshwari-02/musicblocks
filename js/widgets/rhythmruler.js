@@ -1203,7 +1203,7 @@ class RhythmRuler {
             let obj;
             if (noteValue < 0) {
                 obj = rationalToFraction(Math.abs(Math.abs(-1 / noteValue)));
-                cell.innerHTML = `${calcNoteValueToDisplay(obj[1], obj[0])} ${_("silence")}}`;
+                cell.innerHTML = `${calcNoteValueToDisplay(obj[1], obj[0])} ${escapeHTML(_("silence"))}}`;
             } else {
                 obj = rationalToFraction(Math.abs(Math.abs(1 / noteValue)));
                 cell.innerHTML = calcNoteValueToDisplay(obj[1], obj[0]);

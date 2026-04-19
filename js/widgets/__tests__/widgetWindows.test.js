@@ -25,6 +25,10 @@ global._ = str => str;
 global.docById = jest.fn(id => document.getElementById(id));
 global.requestAnimationFrame = jest.fn(cb => cb());
 
+// Import and expose escapeHTML for XSS-safe DOM manipulation
+const { escapeHTML } = require("../../utils/utils");
+global.escapeHTML = escapeHTML;
+
 // Set up the DOM before loading the module
 const floatingWindows = document.createElement("div");
 floatingWindows.id = "floatingWindows";

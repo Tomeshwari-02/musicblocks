@@ -1370,7 +1370,17 @@ const piemenuNthModalPitch = (block, noteValues, note) => {
 
     // enable changing values while pie-menu is open
     const labelElem = docById("labelDiv");
-    labelElem.innerHTML = `<input id="numberLabel" style="position: absolute; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;" class="number" type="number" value="${note}" />`;
+    const input = document.createElement("input");
+    input.id = "numberLabel";
+    input.style.position = "absolute";
+    input.style.webkitUserSelect = "text";
+    input.style.mozUserSelect = "text";
+    input.style.msUserSelect = "text";
+    input.className = "number";
+    input.type = "number";
+    input.value = note;
+    labelElem.innerHTML = "";
+    labelElem.appendChild(input);
     labelElem.classList.add("hasKeyboard");
 
     block.label = docById("numberLabel");
@@ -1821,7 +1831,17 @@ const piemenuNoteValue = (block, noteValue) => {
     };
 
     const labelElem = docById("labelDiv");
-    labelElem.innerHTML = `<input id="numberLabel" style="position: absolute; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;" class="number" type="number" value="${noteValue}" />`;
+    const input = document.createElement("input");
+    input.id = "numberLabel";
+    input.style.position = "absolute";
+    input.style.webkitUserSelect = "text";
+    input.style.mozUserSelect = "text";
+    input.style.msUserSelect = "text";
+    input.className = "number";
+    input.type = "number";
+    input.value = noteValue;
+    labelElem.innerHTML = "";
+    labelElem.appendChild(input);
     labelElem.classList.add("hasKeyboard");
     block.label = docById("numberLabel");
 
@@ -2061,7 +2081,17 @@ const piemenuNumber = (block, wheelValues, selectedValue) => {
     };
 
     const labelElem = docById("labelDiv");
-    labelElem.innerHTML = `<input id="numberLabel" style="position: absolute; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;" class="number" type="number" value="${selectedValue}" />`;
+    const input = document.createElement("input");
+    input.id = "numberLabel";
+    input.style.position = "absolute";
+    input.style.webkitUserSelect = "text";
+    input.style.mozUserSelect = "text";
+    input.style.msUserSelect = "text";
+    input.className = "number";
+    input.type = "number";
+    input.value = selectedValue;
+    labelElem.innerHTML = "";
+    labelElem.appendChild(input);
     labelElem.classList.add("hasKeyboard");
     block.label = docById("numberLabel");
 
@@ -2371,7 +2401,17 @@ const piemenuColor = (block, wheelValues, selectedValue, mode) => {
     };
 
     const labelElem = docById("labelDiv");
-    labelElem.innerHTML = `<input id="numberLabel" style="position: absolute; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;" class="number" type="number" value="${selectedValue}" />`;
+    const input = document.createElement("input");
+    input.id = "numberLabel";
+    input.style.position = "absolute";
+    input.style.webkitUserSelect = "text";
+    input.style.mozUserSelect = "text";
+    input.style.msUserSelect = "text";
+    input.className = "number";
+    input.type = "number";
+    input.value = selectedValue;
+    labelElem.innerHTML = "";
+    labelElem.appendChild(input);
     labelElem.classList.add("hasKeyboard");
     block.label = docById("numberLabel");
 
